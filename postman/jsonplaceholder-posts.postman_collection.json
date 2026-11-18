@@ -1,0 +1,146 @@
+{
+  "info": {
+    "name": "JSONPlaceholder - Posts",
+    "description": "Colecao de testes do recurso /posts. Rode com o Collection Runner ou com: newman run postman/jsonplaceholder-posts.postman_collection.json",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://jsonplaceholder.typicode.com" }
+  ],
+  "item": [
+    {
+      "name": "TC01 Listar posts",
+      "request": { "method": "GET", "url": "{{baseUrl}}/posts" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Retorna 100 itens', function () { pm.expect(pm.response.json()).to.have.lengthOf(100); });",
+              "pm.test('Responde em JSON', function () { pm.response.to.have.header('Content-Type', /application\\/json/); });",
+              "pm.test('Responde em menos de 2 segundos', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC03 Buscar post existente",
+      "request": { "method": "GET", "url": "{{baseUrl}}/posts/1" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Tem os campos esperados', function () { pm.expect(pm.response.json()).to.have.all.keys('userId', 'id', 'title', 'body'); });",
+              "pm.test('Devolve o id pedido', function () { pm.expect(pm.response.json().id).to.eql(1); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC05 Buscar post inexistente",
+      "request": { "method": "GET", "url": "{{baseUrl}}/posts/9999" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 404', function () { pm.response.to.have.status(404); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC06 Filtrar posts por usuario",
+      "request": { "method": "GET", "url": "{{baseUrl}}/posts?userId=1" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('So retorna posts do usuario 1', function () {",
+              "  var posts = pm.response.json();",
+              "  pm.expect(posts.length).to.be.above(0);",
+              "  posts.forEach(function (p) { pm.expect(p.userId).to.eql(1); });",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC07 Comentarios do post",
+      "request": { "method": "GET", "url": "{{baseUrl}}/posts/1/comments" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Todos pertencem ao post 1', function () {",
+              "  var comentarios = pm.response.json();",
+              "  pm.expect(comentarios.length).to.be.above(0);",
+              "  comentarios.forEach(function (c) { pm.expect(c.postId).to.eql(1); });",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC08 Criar post",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/posts",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Post de teste\",\n  \"body\": \"Conteudo do post de teste\",\n  \"userId\": 1\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+              "pm.test('Devolve os dados enviados', function () {",
+              "  var corpo = pm.response.json();",
+              "  pm.expect(corpo).to.have.property('id');",
+              "  pm.expect(corpo.title).to.eql('Post de teste');",
+              "  pm.expect(corpo.userId).to.eql(1);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC10 Remover post",
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/posts/1" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
